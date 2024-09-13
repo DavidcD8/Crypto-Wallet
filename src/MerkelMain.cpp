@@ -12,6 +12,8 @@ void MerkelMain::init()
 {
     int input;
     currentTime = orderBook.getEarliestTime();
+    wallet.insertCurrency("BTC", 10);
+
     while (true)
     {
         printMenu();
@@ -62,6 +64,19 @@ void MerkelMain::printMarketStats()
         std::vector<OrderBookEntry> entries = orderBook.getOrders(OrderBookType::ask, p, currentTime);
         std::cout << "Asks seen: " << entries.size() << std::endl;
         std::cout << "Max seen: " << OrderBook::getHighPrice(entries) << std::endl;
+        std::cout << "Min seen: " << OrderBook::getLowPrice(entries) << std::endl;
+
+        // Check if there are enough entries to calculate a statistic
+        if (entries.size() > 1)
+        {
+            // Call the percentage change function
+            double percentageChange = OrderBook::getPercentageChange(entries);
+            std::cout << "Percentage Change: " << percentageChange << "%" << std::endl;
+        }
+        else
+        {
+            std::cout << "Not enough data to calculate percentage change." << std::endl;
+        }
     }
 
     // std::cout << "OrderBook contains : " << orders.size() << " entries" << std::endl;
@@ -84,7 +99,6 @@ void MerkelMain::enterAsk()
 {
     std::cout << "Make an ask - enter the amount: product, price, amount, eg ETH/BTC, 200,0.5 " << std::endl;
     std::string input;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::getline(std::cin, input);
 
     std::vector<std::string> tokens = CSVReader::tokenise(input, ',');
@@ -94,12 +108,31 @@ void MerkelMain::enterAsk()
     }
     else
     {
+        try
+        {
 
-        OrderBookEntry obe = CSVReader::stringsToOBE(tokens[1],
-                                                     tokens[2],
-                                                     currentTime,
-                                                     tokens[0],
-                                                     OrderBookType::ask);
+            OrderBookEntry obe = CSVReader::stringsToOBE(
+                tokens[1],
+                tokens[2],
+                currentTime,
+                tokens[0],
+                OrderBookType::ask);
+            if (wallet.canFulfillOrder(obe))
+            {
+                std::cout << "Wallet looks good. " << std::endl;
+                orderBook.insertOrder(obe);
+            }
+            else
+            {
+                std::cout << "Wallet has insufficient funds . " << std::endl;
+            }
+
+            orderBook.insertOrder(obe);
+        }
+        catch (const std::exception &e)
+        {
+            std::cout << "MerkelMain::enterAsk Bad input " << input << std::endl;
+        }
     }
 
     std::cout << "You typed: " << input << std::endl;
@@ -107,17 +140,58 @@ void MerkelMain::enterAsk()
 
 void MerkelMain::enterBid()
 {
-    std::cout << "Make a bid - enter the amount" << std::endl;
+    std::cout << "Make a bid - enter the amount: product, price, amount, eg ETH/BTC, 200, 0.5" << std::endl;
+    std::string input;
+    std::getline(std::cin, input);
+
+    std::vector<std::string> tokens = CSVReader::tokenise(input, ',');
+    if (tokens.size() != 3)
+    {
+        std::cout << "MerkleMain::enterBid Bad input! " << std::endl;
+    }
+    else
+    {
+        try
+        {
+            OrderBookEntry obe = CSVReader::stringsToOBE(
+                tokens[1],         // Price
+                tokens[2],         // Amount
+                currentTime,       // Timestamp
+                tokens[0],         // Product
+                OrderBookType::bid // Type
+            );
+            if (wallet.canFulfillOrder(obe))
+            {
+                std::cout << "Wallet looks good " << std::endl;
+                orderBook.insertOrder(obe);
+            }
+            else
+            {
+                std::cout << "Wallet has insufficient funds ." << std::endl;
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cout << " MerkelMain::enterBid Bad input: " << input << std::endl;
+        }
+    }
 }
 
 void MerkelMain::printWallet()
 {
-    std::cout << "Your wallet is empty. " << std::endl;
+    std::cout << wallet.toString() << std::endl;
 }
 
 void MerkelMain::gotoNextTimeframe()
 {
-    std::cout << "Going to next time frame " << std::endl;
+    std::cout << "Going to next time frame." << std::endl;
+    std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids("ETH/BTC", currentTime);
+    std::cout << "Sales: " << sales.size() << std::endl;
+    for (OrderBookEntry &sale : sales)
+    {
+        std::cout << "Sale price: " << sale.price << " amount " << sale.amount << std::endl;
+    }
+
     currentTime = orderBook.getNextTime(currentTime);
 }
 
@@ -129,10 +203,19 @@ bool MerkelMain::exitProgram()
 
 int MerkelMain::getUserOption()
 {
-    int userOption;
-
+    int userOption = 0;
+    std::string line;
     std::cout << "type in 1-7 " << std::endl;
-    std::cin >> userOption;
+    std::getline(std::cin, line);
+    try
+    {
+        userOption = std::stoi(line);
+    }
+    catch (const std::exception &e)
+    {
+        //
+    }
+
     std::cout << "You chose: " << userOption << std::endl;
     return userOption;
 }

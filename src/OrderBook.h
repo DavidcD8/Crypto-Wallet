@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm> 
 
 class OrderBook
 {
@@ -24,9 +25,15 @@ public:
      * If there is no next timestamp, wraps around to the start
     */
     std::string getNextTime(std::string timestamp);
-
+    void insertOrder(OrderBookEntry& order);
     static double getHighPrice(std::vector<OrderBookEntry> &orders);
     static double getLowPrice(std::vector<OrderBookEntry> &orders);
+    static double getPercentageChange(std::vector<OrderBookEntry>& orders);
+    
+    std::vector<OrderBookEntry> matchAsksToBids(std::string product, std::string timestamp);
+
+
+
 
 private:
     std::vector<OrderBookEntry> orders;

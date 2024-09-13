@@ -2,33 +2,36 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include "MerkelMain.h"
+
 
 CSVReader::CSVReader() {}
 
-std::vector<OrderBookEntry> CSVReader::readCSV(std::string csvFilename){
+std::vector<OrderBookEntry> CSVReader::readCSV(std::string csvFilename)
+{
     std::vector<OrderBookEntry> entries;
     std::ifstream csvFile{csvFilename};
     std::string line;
 
-    if (csvFile.is_open()) {
-    
-       while (std::getline(csvFile, line)){
-        try {
-            OrderBookEntry obe = stringsToOBE(tokenise(line, ','));
-            entries.push_back(obe);
+    if (csvFile.is_open())
+    {
+
+        while (std::getline(csvFile, line))
+        {
+            try
+            {
+                OrderBookEntry obe = stringsToOBE(tokenise(line, ','));
+                entries.push_back(obe);
+            }
+            catch (const std::exception &e)
+            {
+                std::cout << "CSVReader::readCSV bad data: " << std::endl;
+            }
         }
-        catch (const std::exception& e) {
-            std::cout << "CSVReader::readCSV bad data: " << std::endl;
-        }
-  
-            
-         }
     }
     std::cout << "CSVReader::readCSV processed " << entries.size() << " entries" << std::endl;
-            return entries;
+    return entries;
 }
-
-   
 
 std::vector<std::string> CSVReader::tokenise(std::string csvLine, char separator)
 {
@@ -47,9 +50,9 @@ std::vector<std::string> CSVReader::tokenise(std::string csvLine, char separator
 
 OrderBookEntry CSVReader::stringsToOBE(std::vector<std::string> tokens)
 {
-    if (tokens.size() != 5)
+    if (tokens.size() != 5) // bad
     {
-          throw std::runtime_error("Incorrect number of tokens");
+        throw std::runtime_error("Incorrect number of tokens");
     }
 
     double price, amount;
@@ -60,7 +63,9 @@ OrderBookEntry CSVReader::stringsToOBE(std::vector<std::string> tokens)
     }
     catch (const std::exception &e)
     {
-      
+        std::cout << "CSVReader stromgsToBE Bad float! " << tokens[3] << std::endl;
+        std::cout << "CSVReader stromgsToBE Bad float! " << tokens[4] << std::endl;
+        throw;
     }
 
     OrderBookEntry obe{
@@ -73,28 +78,32 @@ OrderBookEntry CSVReader::stringsToOBE(std::vector<std::string> tokens)
     return obe;
 }
 
-     OrderBookEntry CSVReader::stringsToOBE(std::string priceString,
-                                                                                    std:: string amountString,
-                                                                                    std::string timestamp,
-                                                                                    std::string product, 
-                                                                                    OrderBookType orderType)
+OrderBookEntry CSVReader::stringsToOBE(std::string priceString,
+                                       std::string amountString,
+                                       std::string timestamp,
+                                       std::string product,
+                                       OrderBookType orderType)
 {
 
-double price, amount;
-try{
-    price = std::stod(priceString);
-    amount = std::stod(amountString);
-}
-catch(const std::exception& e){
-    std::cout << "CSVReader stromgsToBE Bad float! " << priceString<< std::endl;
-    std::cout << "CSVReader stromgsToBE Bad float! " << amountString<< std::endl;
-    throw;
-}
+    double price, amount;
+    try
+    {
+        price = std::stod(priceString);
+        amount = std::stod(amountString);
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "CSVReader stromgsToBE Bad float! " << priceString << std::endl;
+        std::cout << "CSVReader stromgsToBE Bad float! " << amountString << std::endl;
+        throw;
+    }
     OrderBookEntry obe{price,
-                                            amount,
-                                            timestamp ,
-                                            product,
-                                            orderType};
- 
+                       amount,
+                       timestamp,
+                       product,
+                       orderType};
+
     return obe;
-     }
+}
+
+ 

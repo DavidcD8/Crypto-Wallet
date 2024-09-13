@@ -6,18 +6,17 @@
 #include "MerkelMain.h"
 #include "CSVReader.h"
 
+int main() {
 
-
-
-
-int main()
-{
     MerkelMain app{};
     app.init();
-   // CSVReader::readCSV("csvfile.csv");
+    // Wallet wallet;
+    // wallet.insertCurrency("BTC", 10);
+    // wallet.insertCurrency("USDT", 10000);
+    // std::cout << wallet.toString() << std::endl;
+    // wallet.removeCurrency("USDT", 1000);
+    // std::cout << wallet.toString() << std::endl;
 
 
     return 0;
 }
-
-
