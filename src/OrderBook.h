@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <algorithm> 
+#include <algorithm>
+#include <iostream>
+
 
 class OrderBook
 {
@@ -29,7 +31,7 @@ public:
     static double getHighPrice(std::vector<OrderBookEntry> &orders);
     static double getLowPrice(std::vector<OrderBookEntry> &orders);
     static double getPercentageChange(std::vector<OrderBookEntry>& orders);
-    
+
     std::vector<OrderBookEntry> matchAsksToBids(std::string product, std::string timestamp);
 
 
